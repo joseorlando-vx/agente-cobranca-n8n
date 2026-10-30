@@ -1,59 +1,61 @@
-# Agente de Cobrança
+# Collections Agent (n8n)
 
-Régua automática de cobrança que lê uma planilha de controle, identifica clientes pendentes e atrasados, e envia lembretes por WhatsApp e/ou e-mail em pontos específicos do ciclo, sem intervenção manual.
+An automated payment-reminder and collections workflow. It reads a control spreadsheet, finds pending and overdue clients, and sends reminders by WhatsApp and/or email at specific points of the billing cycle, with no manual work.
 
-## O problema
+## The problem
 
-O acompanhamento de pagamentos pendentes era manual: alguém precisava revisar a planilha todo dia e lembrar de mandar mensagem pro cliente certo, na hora certa. Isso gerava inconsistência (às vezes o lembrete atrasava ou não saía) e consumia tempo do time comercial.
+Following up on pending payments was manual: someone had to review the spreadsheet every day and remember to message the right client at the right time. Reminders were sometimes late or never sent, and the commercial team lost time on it.
 
-## A solução
+## The solution
 
-Um workflow que roda uma vez por dia, lê a planilha inteira e segue duas réguas independentes e paralelas:
+A workflow that runs once a day, reads the whole spreadsheet and follows two independent, parallel schedules:
 
-1. **Lembrete (antes do vencimento):** dispara em D-5, D-3, D-1 e no dia do vencimento
-2. **Cobrança (depois do vencimento):** escala em D+3, D+4, D+5, e em D+7 manda um alerta interno pro responsável, sinalizando que precisa de atenção humana
+1. **Reminders (before the due date):** sent at D-5, D-3, D-1 and on the due date
+2. **Collections (after the due date):** escalating messages at D+3, D+4 and D+5, and at D+7 an internal alert to the person in charge, flagging that a human needs to step in
 
-O canal de envio (WhatsApp, e-mail ou os dois) é decidido por uma coluna na própria planilha.
+The delivery channel (WhatsApp, email or both) is chosen by a column in the spreadsheet itself.
 
 ## Stack
 
-- **n8n**: orquestração do workflow, agendado para rodar 1x por dia
-- **Google Sheets**: fonte de dados e registro de controle (status, datas, histórico de envio)
-- **WhatsApp (Evolution API)**: canal de envio via mensagem de texto
-- **Gmail**: canal de envio por e-mail, com corpo HTML formatado
+- **n8n**: workflow orchestration, scheduled once a day
+- **Google Sheets**: data source and control record (status, dates, send history)
+- **WhatsApp (Evolution API)**: text message delivery
+- **Gmail**: email delivery with formatted HTML body
 
-## Meu papel
+## My role
 
-- Desenhei a lógica completa das duas réguas (lembrete e cobrança) e a transição automática de status (PENDENTE → ATRASADO)
-- Implementei o mecanismo de trava que impede reenvio duplicado da mesma mensagem no mesmo estágio
-- Configurei o roteamento por canal (WhatsApp, e-mail ou ambos) a partir de uma coluna da planilha
-- Criei o alerta interno de escalada (D+7) para dar visibilidade a cobranças que passaram de uma semana sem resposta
+- Designed the full logic of both schedules (reminders and collections) and the automatic status transition (PENDENTE to ATRASADO)
+- Implemented the lock that prevents the same message from being sent twice at the same stage
+- Set up channel routing (WhatsApp, email or both) driven by a spreadsheet column
+- Built the internal escalation alert (D+7) so collections older than a week get human attention
 
-## Estrutura do repositório
+## Repository structure
 
 ```
 agente-cobranca-n8n/
-├── README.md            → este arquivo
-├── SECURITY.md           → o que foi sanitizado e onde ficam as credenciais reais
-├── CHANGELOG.md          → histórico de versões
-├── .env.example          → variáveis de ambiente (sem valores reais)
-├── .gitignore
-├── docs/
-│   └── architecture.md   → diagrama do fluxo e decisões de design
-├── config/
-│   └── README.md         → checklist de onde cadastrar cada credencial
-└── workflow/
-    └── agente-cobranca.json   → export sanitizado do n8n
+|-- README.md            this file
+|-- SECURITY.md          what was sanitized and where real credentials live
+|-- CHANGELOG.md         version history
+|-- .env.example         environment variables (no real values)
+|-- .gitignore
+|-- docs/
+|   `-- architecture.md  flow diagram and design decisions
+|-- config/
+|   `-- README.md        checklist of where to register each credential
+`-- workflow/
+    `-- agente-cobranca.json   sanitized n8n export
 ```
 
-## Como rodar
+## How to run
 
-1. Importe `workflow/agente-cobranca.json` no seu n8n
-2. Copie `.env.example` para `.env` e preencha com seus dados
-3. Configure as credenciais de WhatsApp (Evolution API) e Gmail na interface do n8n. Ver `config/README.md` para o checklist
-4. Aponte o node de leitura da planilha para sua própria planilha de controle, com as colunas descritas em `docs/architecture.md`
-5. Ative o workflow
+1. Import `workflow/agente-cobranca.json` into your n8n
+2. Copy `.env.example` to `.env` and fill in your own values
+3. Configure the WhatsApp (Evolution API) and Gmail credentials in the n8n interface. See `config/README.md` for the checklist
+4. Point the spreadsheet-reading node to your own control spreadsheet, with the columns described in `docs/architecture.md`
+5. Activate the workflow
 
-## Segurança
+## Security
 
-Este repositório contém uma versão **sanitizada** do workflow em produção: nenhuma chave, token, telefone ou e-mail real está aqui. Detalhes completos do que foi removido e por quê estão em [`SECURITY.md`](./SECURITY.md).
+This repository contains a **sanitized** version of the production workflow: no real keys, tokens, phone numbers or emails are included. Details of what was removed and why are in [`SECURITY.md`](./SECURITY.md).
+
+Note: column values such as `PENDENTE` and `ATRASADO` are kept in Portuguese because the workflow filters on them.

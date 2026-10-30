@@ -1,51 +1,51 @@
-# Arquitetura
+# Architecture
 
-## Fluxo
+## Flow
 
 ```
-[Agendamento diário, 8h]
+[Daily schedule, 8 AM]
         │
         ▼
-[Google Sheets: ler planilha de controle]
+[Google Sheets: read control sheet]
         │
-        ├──► [Filtrar STATUS = PENDENTE] ──► [Calcular datas de lembrete] ──► [Bate com D-5/D-3/D-1/D0?]
+        ├──► [Filter STATUS = PENDENTE] ──► [Compute reminder dates] ──► [Matches D-5/D-3/D-1/D0?]
         │                                                                          │
-        │                                                                          ├─ sim ─► [Rotear por canal] ─► [WhatsApp e/ou E-mail] ─► [Atualizar planilha]
-        │                                                                          └─ não ─► [Já venceu?] ─► [Marcar STATUS = ATRASADO]
+        │                                                                          ├─ yes ─► [Route by channel] ─► [WhatsApp and/or Email] ─► [Update sheet]
+        │                                                                          └─ no ─► [Past due?] ─► [Set STATUS = ATRASADO]
         │
-        └──► [Filtrar STATUS = ATRASADO] ──► [Calcular dias de atraso]
+        └──► [Filter STATUS = ATRASADO] ──► [Compute days overdue]
                                                       │
                                     ┌─────────────────┼─────────────────┬──────────────────┐
                                     ▼                 ▼                 ▼                  ▼
-                              [D+3: trava?]     [D+4: trava?]     [D+5: trava?]     [D+7: trava?]
+                              [D+3: locked?]     [D+4: locked?]     [D+5: locked?]     [D+7: locked?]
                                     │                 │                 │                  │
                                     ▼                 ▼                 ▼                  ▼
-                          [Enviar + travar]  [Enviar + travar]  [Enviar + travar]  [Alerta interno]
+                          [Send + lock]  [Send + lock]  [Send + lock]  [Internal alert]
 ```
 
-## Componentes
+## Components
 
-| Componente | Papel |
+| Component | Role |
 |---|---|
-| n8n (Schedule Trigger) | Dispara a execução 1x por dia |
-| Google Sheets | Fonte de dados única: status, vencimento, canal, contato, histórico de envio |
-| Evolution API | Envio de mensagens de WhatsApp |
-| Gmail | Envio de e-mails formatados em HTML |
+| n8n (Schedule Trigger) | Triggers the run once a day |
+| Google Sheets | Single source of truth: status, due date, channel, contact, send history |
+| Evolution API | Sends WhatsApp messages |
+| Gmail | Sends HTML-formatted emails |
 
-## Colunas esperadas na planilha
+## Expected spreadsheet columns
 
-| Coluna | Uso |
+| Column | Use |
 |---|---|
-| `PS` | Identificador único da cobrança (usado para localizar a linha em updates) |
-| `STATUS` | `PENDENTE`, `ATRASADO` ou qualquer outro valor (ex: `PAGO`), que some dos filtros |
-| `VENCIMENTO` | Data de vencimento, formato `DD/MM/AAAA` |
-| `CANAL` | `WHATSAPP`, `E-MAIL` ou `AMBOS` |
-| `CLIENTE`, `WHATSAPP`, `E-MAIL`, `VALOR (R$)`, `TIPO`, `PARCELA` | Dados usados no corpo da mensagem |
-| `AVISO ENVIADO`, `MSG_D3`, `MSG_D4`, `MSG_D5`, `MSG_RESPONSAVEL` | Colunas de controle, preenchidas automaticamente para travar reenvio |
+| `PS` | Unique charge identifier (used to locate the row on updates) |
+| `STATUS` | `PENDENTE`, `ATRASADO` or any other value (e.g. `PAGO`), which drops out of the filters |
+| `VENCIMENTO` | Due date, format `DD/MM/YYYY` |
+| `CANAL` | `WHATSAPP`, `E-MAIL` or `AMBOS` (both) |
+| `CLIENTE`, `WHATSAPP`, `E-MAIL`, `VALOR (R$)`, `TIPO`, `PARCELA` | Data used in the message body |
+| `AVISO ENVIADO`, `MSG_D3`, `MSG_D4`, `MSG_D5`, `MSG_RESPONSAVEL` | Control columns, filled automatically to block re-sends |
 
-## Decisões de design
+## Design decisions
 
-- **Duas réguas paralelas e independentes** (lembrete e cobrança): rodam a partir da mesma leitura da planilha, mas não dependem uma da outra. Isso simplifica a lógica de cada uma.
-- **Trava por coluna vazia, não por contador**: cada estágio (D+3, D+4, D+5) só dispara se o campo correspondente na planilha ainda estiver vazio. Depois do envio, o campo é preenchido com data/hora, o que naturalmente impede reenvio.
-- **Transição de status automática**: uma linha PENDENTE que passa da data vira ATRASADO sozinha, sem precisar de intervenção manual. Na próxima execução, ela já entra na régua de cobrança.
-- **Escalada para atenção humana em D+7**: o sistema não tenta resolver cobranças muito atrasadas sozinho, ele avisa um responsável interno pra intervir manualmente.
+- **Two parallel, independent schedules** (reminders and collections): both run from the same spreadsheet read but do not depend on each other, which keeps the logic of each simple.
+- **Lock by empty column, not by counter**: each stage (D+3, D+4, D+5) fires only if its spreadsheet field is still empty. After sending, the field is filled with a timestamp, which naturally prevents re-sends.
+- **Automatic status transition**: a PENDENTE row that passes its due date becomes ATRASADO by itself, with no manual step. On the next run it enters the collections schedule.
+- **Escalation to a human at D+7**: the system does not try to resolve long-overdue charges on its own; it alerts an internal owner to step in manually.
