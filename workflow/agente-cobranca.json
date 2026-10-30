@@ -1,0 +1,1548 @@
+{
+  "name": "Agente de Cobrança",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "id": "53c5f6a5-703e-4817-92f2-9ce8568f8bd2",
+      "name": "Todos os dias às 8h (Brasília)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -960,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_ID_DE_PLANILHA_AQUI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "455025293",
+          "mode": "id"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A2:P"
+            }
+          }
+        }
+      },
+      "id": "c48c99cc-c7f7-4e2c-b274-0471cb96b2c1",
+      "name": "Ler Planilha COBRANÇA",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -736,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.STATUS }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "PENDENTE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ebf0f383-a9d9-4acc-bfff-20fc1f2b0a33",
+      "name": "Filtrar STATUS = PENDENTE",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "dataHoje",
+              "type": "string",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd\") }}"
+            },
+            {
+              "id": "d1",
+              "name": "dataHojeMais1",
+              "type": "string",
+              "value": "={{ $now.plus({ days: 1 }).toFormat(\"yyyy-MM-dd\") }}"
+            },
+            {
+              "id": "2",
+              "name": "dataHojeMais3",
+              "type": "string",
+              "value": "={{ $now.plus({ days: 3 }).toFormat(\"yyyy-MM-dd\") }}"
+            },
+            {
+              "id": "d5",
+              "name": "dataHojeMais5",
+              "type": "string",
+              "value": "={{ $now.plus({ days: 5 }).toFormat(\"yyyy-MM-dd\") }}"
+            },
+            {
+              "id": "3",
+              "name": "dataVencimento",
+              "type": "string",
+              "value": "={{ $json.VENCIMENTO }}"
+            },
+            {
+              "id": "a9e92dd2-654d-4b77-bd08-a9ad7acb5808",
+              "name": "=dataVencimentoParsed",
+              "type": "string",
+              "value": "={{ DateTime.fromFormat($json.VENCIMENTO, \"dd/MM/yyyy\").toFormat(\"yyyy-MM-dd\") }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6127903c-1f48-43e3-aeb6-b22247123cc2",
+      "name": "Adicionar Campos de Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d5-check",
+              "leftValue": "={{ $json.dataVencimentoParsed }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "={{ $json.dataHojeMais5 }}"
+            },
+            {
+              "id": "58f4affa-ab13-48a9-a68f-3df74476ffa7",
+              "leftValue": "={{ $json.dataVencimentoParsed }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "={{ $json.dataHojeMais3 }}"
+            },
+            {
+              "id": "d1-check",
+              "leftValue": "={{ $json.dataVencimentoParsed }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "={{ $json.dataHojeMais1 }}"
+            },
+            {
+              "id": "3b3d115c-905d-4b17-9054-66422fde1702",
+              "leftValue": "={{ $json.dataVencimentoParsed }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "={{ $json.dataHoje }}"
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "042b584b-b1c7-46b4-94f5-b8fd7cf1f360",
+      "name": "Verificar Condição de Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.CANAL }}",
+                    "rightValue": "WHATSAPP",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "WhatsApp"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.CANAL }}",
+                    "rightValue": "E-MAIL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Email"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.CANAL }}",
+                    "rightValue": "AMBOS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Ambos"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "55580f44-6005-43cb-a227-fb0afe11ac08",
+      "name": "Rotear por CANAL",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": String($json.WHATSAPP), \"text\": \"Olá *\" + $json.CLIENTE + \"*! 👋\\n\\nPassamos para lembrá-lo(a) sobre um pagamento pendente:\\n\\n📌 *Ref:* \" + $json.PS + \" — \" + $json.TIPO + \"\\n📋 *Parcela:* \" + $json.PARCELA + \"\\n💰 *Valor:* R$ \" + Number($json[\"VALOR (R$)\"]).toLocaleString(\"pt-BR\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n📅 *Vencimento:* \" + $json.VENCIMENTO + \"\\n\\nQualquer dúvida, estamos à disposição.\\n\\n_Nossa Empresa_\" } }}",
+        "options": {}
+      },
+      "id": "43229b84-95ad-4434-851d-5c83ab36b494",
+      "name": "Enviar WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -624
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "d9c6225b-4203-4b13-a6f9-3ded090a901b",
+      "name": "Combinar Envios",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2224,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json[\"E-MAIL\"] }}",
+        "subject": "=Lembrete de Pagamento - {{ $json.CLIENTE }}",
+        "message": "=<p>Olá {{ $json.CLIENTE }},</p><p>Passamos para lembrá-lo(a) sobre um pagamento pendente:</p><table><tr><td>Ref:</td><td>{{ $json.PS }} — {{ $json.TIPO }}</td></tr><tr><td>Parcela:</td><td>{{ $json.PARCELA }}</td></tr><tr><td>Valor:</td><td>R$ {{ Number($json['VALOR (R$)']).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}</td></tr><tr><td>Vencimento:</td><td>{{ $json.VENCIMENTO }}</td></tr></table><p>Qualquer dúvida, entre em contato conosco.</p><p>Atenciosamente,<br><strong>Nossa Empresa</strong></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "befedaaa-056f-46b1-a35b-bb1282ddacd8",
+      "name": "Enviar E-mail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        -432
+      ],
+      "webhookId": "5fa5dbc7-8e18-4a9a-8330-741ea9ae26ab",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": String($json.WHATSAPP), \"text\": \"Olá *\" + $json.CLIENTE + \"*! 👋\\n\\nPassamos para lembrá-lo(a) sobre um pagamento pendente:\\n\\n📌 *Ref:* \" + $json.PS + \" — \" + $json.TIPO + \"\\n📋 *Parcela:* \" + $json.PARCELA + \"\\n💰 *Valor:* R$ \" + Number($json[\"VALOR (R$)\"]).toLocaleString(\"pt-BR\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n📅 *Vencimento:* \" + $json.VENCIMENTO + \"\\n\\nQualquer dúvida, estamos à disposição.\\n\\n_Nossa Empresa_\" } }}",
+        "options": {}
+      },
+      "id": "1e3c6b76-25b8-4a4e-a9b8-d9403383dd2d",
+      "name": "Enviar WhatsApp (Ambos)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1776,
+        -240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Adicionar Campos de Data\").item.json[\"E-MAIL\"] }}",
+        "subject": "=Lembrete de Pagamento - {{ $(\"Adicionar Campos de Data\").item.json.CLIENTE }}",
+        "message": "=<p>Olá {{ $(\"Adicionar Campos de Data\").item.json.CLIENTE }},</p><p>Passamos para lembrá-lo(a) sobre um pagamento pendente:</p><p>Ref: {{ $(\"Adicionar Campos de Data\").item.json.PS }}</p><p>Atenciosamente,<br><strong>Nossa Empresa</strong></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e90d1b4d-45be-4345-ac57-01d42c2dd191",
+      "name": "Enviar E-mail (Ambos)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        -240
+      ],
+      "webhookId": "f413efa4-765f-47b7-84cd-00f4edf90f0a",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dataVencimentoParsed }}",
+              "rightValue": "={{ $json.dataHoje }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              },
+              "id": "be3471aa-ed4b-4956-aaff-55105c46943d"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "5f054f13-695b-4023-b280-93a0eb75b273",
+      "name": "Verificar se Atrasado",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_ID_DE_PLANILHA_AQUI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "PS": "={{ $(\"Adicionar Campos de Data\").item.json.PS }}",
+            "STATUS": "ATRASADO"
+          },
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "fa07d43d-24b3-446c-a57f-9d478d7dbffd",
+      "name": "Atualizar STATUS para ATRASADO",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SEU_ID_DE_PLANILHA_AQUI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "PS",
+              "id": "PS",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": false,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "AVISO ENVIADO",
+              "id": "AVISO ENVIADO",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "AVISO ENVIADO": "={{ $now.toFormat(\"dd/MM/yyyy HH:mm\") }}",
+            "PS": "={{ $(\"Adicionar Campos de Data\").item.json.PS }}"
+          }
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "2aca7a91-1ccd-41c6-b24f-840f7715b575",
+      "name": "Atualizar AVISO ENVIADO",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2448,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0c95a63f-b314-4f25-9bf3-6c1c1309f1eb",
+              "leftValue": "={{ $json.STATUS }}",
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "ATRASADO"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cb76dda9-41b2-49a3-b6ed-9a1e401fa0d3",
+      "name": "Filtrar STATUS = ATRASADO",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const partes = $json.VENCIMENTO.split('/');\nconst vencimento = new Date(partes[2], partes[1] - 1, partes[0]);\nconst hoje = new Date();\nhoje.setHours(0,0,0,0);\nconst diff = Math.floor((hoje - vencimento) / (1000 * 60 * 60 * 24));\nreturn { json: { ...$json, dias_atraso: diff } };"
+      },
+      "id": "c7673af8-9fb4-4611-a247-695f6809c881",
+      "name": "Calcular Dias Atraso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dias_atraso }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "id": "d3-check-1"
+            },
+            {
+              "leftValue": "={{ $json.MSG_D3 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "d3-check-2"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "22a377f2-eaf6-4723-93c6-8df04f2046f9",
+      "name": "Verificar D+3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": String($json.WHATSAPP), \"text\": \"Olá *\" + $json.CLIENTE + \"*! 👋\\n\\nIdentificamos que a parcela abaixo ainda consta em aberto:\\n\\n📌 *Ref:* \" + $json.PS + \"\\n\\n_Nossa Empresa_\" } }}",
+        "options": {}
+      },
+      "id": "228fdc6c-8acc-4069-9069-ad6f167df851",
+      "name": "Enviar WhatsApp D+3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        976
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SEU_ID_DE_PLANILHA_AQUI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": true,
+              "display": true,
+              "displayName": "PS",
+              "id": "PS",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": false,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "MSG_D3",
+              "id": "MSG_D3",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "MSG_D3": "={{ $now.toFormat(\"dd/MM/yyyy HH:mm\") }}",
+            "row_number": "={{ $('Calcular Dias Atraso').item.json.row_number }}",
+            "PS": "={{ $('Calcular Dias Atraso').item.json.PS }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "562fb04e-92bb-4ab1-825d-0be6996c3b47",
+      "name": "Atualizar MSG_D3",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dias_atraso }}",
+              "rightValue": 4,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "id": "d4-check-1"
+            },
+            {
+              "leftValue": "={{ $json.MSG_D4 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "d4-check-2"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "b846f71d-afff-4543-aa80-bdfba7ec606b",
+      "name": "Verificar D+4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": String($json.WHATSAPP), \"text\": \"Olá *\" + $json.CLIENTE + \"*!\\n\\nPassamos novamente em relação à parcela ainda em aberto.\\n\\n_Nossa Empresa_\" } }}",
+        "options": {}
+      },
+      "id": "056b6e69-2899-4be0-8cc3-163b01acdab4",
+      "name": "Enviar WhatsApp D+4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        1328
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SEU_ID_DE_PLANILHA_AQUI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": true,
+              "display": true,
+              "displayName": "PS",
+              "id": "PS",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": false,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "MSG_D4",
+              "id": "MSG_D4",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "MSG_D4": "={{ $now.toFormat(\"dd/MM/yyyy HH:mm\") }}",
+            "row_number": "={{ $('Calcular Dias Atraso').item.json.row_number }}",
+            "PS": "={{ $('Calcular Dias Atraso').item.json.PS }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "d4ce76c0-c2eb-4a72-b6b1-375f30036cc9",
+      "name": "Atualizar MSG_D4",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dias_atraso }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "id": "d5-check-1"
+            },
+            {
+              "leftValue": "={{ $json.MSG_D5 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "d5-check-2"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "fbaeadfe-0f78-40f7-a8d5-8fc1563590cc",
+      "name": "Verificar D+5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": String($json.WHATSAPP), \"text\": \"Olá *\" + $json.CLIENTE + \"*!\\n\\nGostaríamos de solicitar atenção para a pendência ainda em aberto.\\n\\n_Nossa Empresa_\" } }}",
+        "options": {}
+      },
+      "id": "fd6f85c7-b866-4510-b004-fc6b52364b98",
+      "name": "Enviar WhatsApp D+5",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        1648
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SEU_ID_DE_PLANILHA_AQUI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": true,
+              "display": true,
+              "displayName": "PS",
+              "id": "PS",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": false,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "MSG_D5",
+              "id": "MSG_D5",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "MSG_D5": "={{ $now.toFormat(\"dd/MM/yyyy HH:mm\") }}",
+            "row_number": "={{ $('Calcular Dias Atraso').item.json.row_number }}",
+            "PS": "={{ $('Calcular Dias Atraso').item.json.PS }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "5edab78a-8e55-4e60-a101-e3d60e54c6e8",
+      "name": "Atualizar MSG_D5",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dias_atraso }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "id": "d7-check-1"
+            },
+            {
+              "leftValue": "={{ $json.MSG_RESPONSAVEL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "d7-check-2"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "90dba0bd-f9d7-4050-bfa7-4f167010b93b",
+      "name": "Verificar D+7 responsável interno",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        2528
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sua-evolution-api.exemplo.com/message/sendText/sua-instancia",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": \"556100000009\", \"text\": \"⚠️ *Cobrança em atraso — atenção necessária*\\n\\nCliente: *\" + $json.CLIENTE + \"*\\nDias de atraso: \" + $json.dias_atraso + \"\\n\\nVerificar situação e tomar providências.\" } }}",
+        "options": {}
+      },
+      "id": "2cfb40ba-2be7-4c6e-8874-81a99fdceb70",
+      "name": "Enviar WhatsApp responsável interno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1392,
+        2512
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SEU_ID_DE_PLANILHA_AQUI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "455025293"
+        },
+        "columns": {
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "PS"
+          ],
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": true,
+              "display": true,
+              "displayName": "PS",
+              "id": "PS",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": false,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "MSG_RESPONSAVEL",
+              "id": "MSG_RESPONSAVEL",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "MSG_RESPONSAVEL": "={{ $now.toFormat(\"dd/MM/yyyy HH:mm\") }}",
+            "row_number": "={{ $('Calcular Dias Atraso').item.json.row_number }}",
+            "PS": "={{ $('Calcular Dias Atraso').item.json.PS }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 2,
+              "firstDataRow": 3
+            }
+          }
+        }
+      },
+      "id": "7c6ee95f-ce84-43fd-8228-fa4949bfbabe",
+      "name": "Atualizar MSG_RESPONSAVEL",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1616,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Calcular Dias Atraso').item.json['E-MAIL'] }}",
+        "subject": "=Aviso de Pagamento em Atraso - {{ $('Calcular Dias Atraso').item.json.CLIENTE }}",
+        "message": "=<p>Identificamos que a parcela abaixo ainda consta em aberto.</p><p>Atenciosamente,<br><strong>Nossa Empresa</strong></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "1f931738-43a8-43d9-8514-aa11be2b834c",
+      "name": "Enviar E-mail D+3",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        1168
+      ],
+      "webhookId": "e9866fea-d990-4f49-84c1-56900221f95a",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Calcular Dias Atraso').item.json['E-MAIL'] }}",
+        "subject": "=Aviso de Pagamento em Atraso - {{ $('Calcular Dias Atraso').item.json.CLIENTE }}",
+        "message": "=<p>Passamos novamente em relação à parcela ainda em aberto.</p><p>Atenciosamente,<br><strong>Nossa Empresa</strong></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "058211ea-fc95-4544-80a6-4fae59eceee1",
+      "name": "Enviar E-mail D+4",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        1488
+      ],
+      "webhookId": "c2b96746-6109-4ece-84ff-f0e852958e31",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Calcular Dias Atraso').item.json['E-MAIL'] }}",
+        "subject": "=Aviso de Pagamento em Atraso - {{ $('Calcular Dias Atraso').item.json.CLIENTE }}",
+        "message": "=<p>Gostaríamos de solicitar atenção para a pendência ainda em aberto.</p><p>Atenciosamente,<br><strong>Nossa Empresa</strong></p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6f8e6270-8853-45f4-8ef1-277f8a1b0590",
+      "name": "Enviar E-mail D+5",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        1824
+      ],
+      "webhookId": "440da2cf-5dd2-47bf-8327-547ee48949a8",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "# Agente de Cobranca\n\n## O que este workflow faz\nRegua automatica de cobranca para clientes desta empresa, rodando 1x por dia (8h Brasilia).\n\n## Fonte de dados\nGoogle Sheets - planilha \"Controle de Cobranca\".\n\n## Duas reguas independentes\n1. Lembrete (antes de vencer): D-5, D-3, D-1, D0\n2. Cobranca (depois de vencido): D+3, D+4, D+5 e D+7 (alerta interno pro responsável interno)\n\n## ATENCAO - Separacao de instancias\nEssa automacao usa a instancia Evolution desta empresa - NAO reaproveitar essa instancia pra outro bot.",
+        "height": 780,
+        "width": 620
+      },
+      "id": "5276b6f9-05ff-4f03-bff6-6ae77aac1760",
+      "name": "DOCUMENTACAO - Visao Geral",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        -1248
+      ]
+    }
+  ],
+  "connections": {
+    "Todos os dias às 8h (Brasília)": {
+      "main": [
+        [
+          {
+            "node": "Ler Planilha COBRANÇA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler Planilha COBRANÇA": {
+      "main": [
+        [
+          {
+            "node": "Filtrar STATUS = PENDENTE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filtrar STATUS = ATRASADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar STATUS = PENDENTE": {
+      "main": [
+        [
+          {
+            "node": "Adicionar Campos de Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adicionar Campos de Data": {
+      "main": [
+        [
+          {
+            "node": "Verificar Condição de Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Condição de Data": {
+      "main": [
+        [
+          {
+            "node": "Rotear por CANAL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verificar se Atrasado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rotear por CANAL": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar E-mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar WhatsApp (Ambos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Combinar Envios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar Envios": {
+      "main": [
+        [
+          {
+            "node": "Atualizar AVISO ENVIADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail": {
+      "main": [
+        [
+          {
+            "node": "Combinar Envios",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp (Ambos)": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail (Ambos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar se Atrasado": {
+      "main": [
+        [
+          {
+            "node": "Atualizar STATUS para ATRASADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail (Ambos)": {
+      "main": [
+        [
+          {
+            "node": "Combinar Envios",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Filtrar STATUS = ATRASADO": {
+      "main": [
+        [
+          {
+            "node": "Calcular Dias Atraso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Dias Atraso": {
+      "main": [
+        [
+          {
+            "node": "Verificar D+3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Verificar D+4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Verificar D+5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Verificar D+7 responsável interno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar D+3": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp D+3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp D+3": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar E-mail D+3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar D+4": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp D+4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp D+4": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar E-mail D+4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar D+5": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp D+5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp D+5": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar E-mail D+5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar D+7 responsável interno": {
+      "main": [
+        [
+          {
+            "node": "Enviar WhatsApp responsável interno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar WhatsApp responsável interno": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_RESPONSAVEL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail D+3": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail D+4": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail D+5": {
+      "main": [
+        [
+          {
+            "node": "Atualizar MSG_D5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

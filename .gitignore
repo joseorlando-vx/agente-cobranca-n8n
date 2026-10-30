@@ -1,0 +1,12 @@
+# Segredos e credenciais, nunca versionar
+.env
+*.env
+credentials/
+*.key
+*.pem
+
+# Arquivos temporários
+.DS_Store
+*.log
+node_modules/
+__pycache__/
